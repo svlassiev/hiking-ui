@@ -10,7 +10,7 @@
   "dependencies": {
     "@codekraft-studio/vue-animated": "^0.1.5",
     "@mdi/font": "^4.9.95",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "babel-polyfill": "^6.26.0",
     "core-js": "^2.6.11",
     "es6-promise": "^4.2.8",
