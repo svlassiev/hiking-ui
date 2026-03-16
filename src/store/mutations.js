@@ -112,8 +112,7 @@ export default {
     },
     [types.DELETE_IMAGES_LIST.SUCCESS] (state, listId) {
         state.updateMessage = `Images list [${listId}] is deleted`
-        const updatedFolders = state.folders.filter(folder => folder.listId !== listId)
-        state.folders = updatedFolders
+        state.folders = state.folders.filter(folder => folder.listId !== listId)
         state.updating = false
     },
     [types.DELETE_IMAGES_LIST.ERROR] (state, error) {
@@ -127,13 +126,10 @@ export default {
     },
     [types.ADD_IMAGE.SUCCESS] (state, {listId, image}) {
         state.updateMessage = `Image is added to list [${listId}]`
-        const updatedFolders = state.folders.map(list => {
-            if (list.listId === listId) {
-                list.images.unshift(image)
-            }
-            return list
-        })
-        state = {...state, folders: updatedFolders}
+        const list = state.folders.find(list => list.listId === listId)
+        if (list) {
+            list.images.unshift(image)
+        }
         state.updating = false
     },
     [types.ADD_IMAGE.ERROR] (state, error) {
@@ -147,13 +143,10 @@ export default {
     },
     [types.DELETE_IMAGE.SUCCESS] (state, {listId, imageId}) {
         state.updateMessage = `Image [${imageId}] is deleted from list [${listId}]`
-        const updatedFolders = state.folders.map(list => {
-            if (list.listId === listId) {
-                return list.images.filter(image => image.imageId !== imageId)
-            }
-            return list
-        })
-        state = {...state, folders: updatedFolders}
+        const list = state.folders.find(list => list.listId === listId)
+        if (list) {
+            list.images = list.images.filter(image => image.imageId !== imageId)
+        }
         state.updating = false
     },
     [types.DELETE_IMAGE.ERROR] (state, error) {
@@ -162,21 +155,19 @@ export default {
     },
 
     [types.INITIALIZE_IMAGES_LIST.SUBMIT] (state, listId) {
-        let lists = state.lists
-        if (lists.includes(list => list.listId === listId)) {
-            lists = state.lists.map(list => {
+        if (state.lists.some(list => list.listId === listId)) {
+            state.lists = state.lists.map(list => {
                 if (list.listId === listId) {
                     list.loading = true
                 }
                 return list
             })
         } else {
-            lists.push({listId, loaded: false, loading: true, images: []})
+            state.lists.push({listId, loaded: false, loading: true, images: []})
         }
-        state = {...state, lists}
     },
     [types.INITIALIZE_IMAGES_LIST.SUCCESS] (state, {listId, cache, limit}) {
-        const updatedLists = state.lists.map(list => {
+        state.lists = state.lists.map(list => {
             if (list.listId === listId) {
                 list.loading = false
                 const imagesLimit = cache.length > limit ? limit : cache.length
@@ -188,43 +179,39 @@ export default {
             }
             return list
         })
-        state = {...state, lists: updatedLists}
     },
     [types.INITIALIZE_IMAGES_LIST.ERROR] (state, listId) {
-        const updatedLists = state.lists.map(list => {
+        state.lists = state.lists.map(list => {
             if (list.listId === listId) {
                 list.loading = false
             }
             return list
         })
-        state = {...state, lists: updatedLists}
     },
 
     [types.LOAD_IMAGES.SUBMIT] () {},
     [types.LOAD_IMAGES.SUCCESS] (state, listId) {
-        const updatedLists = state.lists.map(list => {
+        state.lists = state.lists.map(list => {
             if (list.listId === listId) {
                 list.images = list.images.concat(list.cache)
                 list.cache = []
             }
             return list
         })
-        state = {...state, lists: updatedLists}
     },
     [types.LOAD_IMAGES.ERROR] () {},
 
     [types.LOAD_IMAGES_TO_CACHE.SUBMIT] (state, listId) {
-        const updatedLists = state.lists.map(list => {
+        state.lists = state.lists.map(list => {
             if (list.listId === listId) {
                 list.loading = true
                 list.cache = []
             }
             return list
         })
-        state = {...state, lists: updatedLists}
     },
     [types.LOAD_IMAGES_TO_CACHE.SUCCESS] (state, {listId, images, limit}) {
-        const updatedLists = state.lists.map(list => {
+        state.lists = state.lists.map(list => {
             if (list.listId === listId) {
                 list.cache = images
                 list.loading = false
@@ -232,15 +219,13 @@ export default {
             }
             return list
         })
-        state = {...state, lists: updatedLists}
     },
     [types.LOAD_IMAGES_TO_CACHE.ERROR] (state, listId) {
-        const updatedLists = state.lists.map(list => {
+        state.lists = state.lists.map(list => {
             if (list.listId === listId) {
                 list.loading = false
             }
             return list
         })
-        state = {...state, lists: updatedLists}
     }
 }

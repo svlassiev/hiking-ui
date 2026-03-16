@@ -123,25 +123,21 @@ export default {
     },
 
     async loadMoreImages({commit, dispatch, state}, imagesList) {
-        const { listId, images = [], cache=[] } = state.lists.find(list => list.listId === imagesList.listId)
+        const { listId, cache=[] } = state.lists.find(list => list.listId === imagesList.listId)
         commit(types.LOAD_IMAGES.SUBMIT)
         if (cache.length > 0) {
-            console.log('load from cache, already exists: ', images.length)
             commit(types.LOAD_IMAGES.SUCCESS, listId)
         }
-        console.log('call load to cache')
         dispatch('loadImagesToCache', imagesList)
     },
     async loadImagesToCache({commit, state}, imagesList) {
         const { listId, loaded = false, loading = false, images = [] } = state.lists.find(list => list.listId === imagesList.listId)
         if (loaded || loading) {
-            console.log('loaded:', loaded, 'loading:', loading)
             return
         }
         const skip = images.length
         const limit = 5
         commit(types.LOAD_IMAGES_TO_CACHE.SUBMIT, listId)
-        console.log('load to cache, already exists: ', images.length)
         axios.post(apiUrl + 'images', {imageIds: imagesList.images, skip, limit})
             .then(response => {
                 commit(types.LOAD_IMAGES_TO_CACHE.SUCCESS, {listId, images: response.data, limit})

@@ -77,6 +77,11 @@ import {ObserveVisibility} from 'vue-observe-visibility'
             images () {
                 return this.$store.state.images
             },
+            imageMap () {
+                const map = new Map()
+                this.images.forEach(img => map.set(img.imageId, img))
+                return map
+            },
             entries () {
                 const entries = this.data
                 return entries
@@ -92,7 +97,7 @@ import {ObserveVisibility} from 'vue-observe-visibility'
                 }
             },
             image(imageId) {
-                return this.images.find(item => item.imageId === imageId)
+                return this.imageMap.get(imageId)
             },
             loadImages() {
                 this.$store.dispatch('loadImages')

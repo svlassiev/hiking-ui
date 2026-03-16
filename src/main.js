@@ -1,10 +1,10 @@
-import 'babel-polyfill'
 import Vue from 'vue'
 import App from './App.vue'
 import vuetify from './plugins/vuetify'
 import router from './plugins/router'
 import store from './store/index'
-import firebase from "firebase"
+import firebase from "firebase/compat/app"
+import "firebase/compat/auth"
 
 Vue.config.productionTip = false
 Vue.use(require('vue-moment'))

@@ -61,7 +61,8 @@
 </template>
 
 <script>
-    import firebase from 'firebase'
+    import firebase from 'firebase/compat/app'
+    import 'firebase/compat/auth'
     import EditImageListTimelineItems from './EditImageListTimelineItems'
     import { uuid } from 'uuidv4'
 

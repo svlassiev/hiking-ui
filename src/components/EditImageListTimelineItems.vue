@@ -121,7 +121,7 @@
 <script>
 import axios from 'axios'
 import { ObserveVisibility } from 'vue-observe-visibility'
-import lodash from 'lodash'
+import debounce from 'lodash/debounce'
 
 const apiUrl = 'https://serg.vlassiev.info/hiking-api/'
 
@@ -203,10 +203,10 @@ export default {
                 this.loadImages()
             }
         },
-        onListNameUpdated: lodash.debounce(function () {
+        onListNameUpdated: debounce(function () {
             this.$store.dispatch('updateListName', { listId: this.imagesList.listId, listName: this.updates.listName })
         }, 700),
-        onImageDescriptionUpdated: lodash.debounce(function (imageId, description) {
+        onImageDescriptionUpdated: debounce(function (imageId, description) {
             this.$store.dispatch('updateImageDescription', { imageId, description })
         }, 700),
         onListDelete() {

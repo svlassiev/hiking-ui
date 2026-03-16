@@ -45,7 +45,7 @@
                             </v-row>
                         </v-timeline-item>
                         <v-timeline-item hide-dot class="mb-0 pb-0" align="center">
-                            <v-img :src="image.location" :lazy-src="image.thumbnail" max-width="max-content" :max-height="$vuetify.breakpoint.xs ? 300 : 600" contain
+                            <v-img :src="responsiveSrc(image)" :lazy-src="image.thumbnail" max-width="max-content" :max-height="$vuetify.breakpoint.xs ? 300 : 600" contain
                                    class="ml-n7"/>
                         </v-timeline-item>
                         <v-timeline-item hide-dot class="mt-0 py-0">
@@ -182,6 +182,18 @@
             },
             map(image) {
                 return 'https://yandex.ru/maps/?l=sat&mode=search&text=' + this.coordinates(image)
+            },
+            variantUrl(image, name) {
+                if (image.variants) {
+                    const variant = image.variants.find(v => v.name === name)
+                    if (variant) return variant.location
+                }
+                return image.location
+            },
+            responsiveSrc(image) {
+                if (this.$vuetify.breakpoint.xs) return this.variantUrl(image, 'V800')
+                if (this.$vuetify.breakpoint.smAndDown) return this.variantUrl(image, 'V1024')
+                return this.variantUrl(image, 'V2048')
             },
             onMapClick(image) {
                 window.open(this.map(image))

@@ -4,7 +4,8 @@ import Timeline from '../components/HikingTimeline'
 import SimpleTimeline from '../components/SimpleTimeline'
 import Login from '../components/Login'
 import Edit from '../components/Edit'
-import firebase from "firebase"
+import firebase from "firebase/compat/app"
+import "firebase/compat/auth"
 
 Vue.use(Router);
 
