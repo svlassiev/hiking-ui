@@ -23,16 +23,18 @@ export default {
     [types.LOAD_SIMPLE_TIMELINE_TAIL.ERROR] () {
     },
 
-    [types.LOAD_IMAGES_FLAT.SUBMIT] (state) {
-        state.loadingImages = true
-    },
-    [types.LOAD_IMAGES_FLAT.SUCCESS] (state, {images, limit}) {
-        images.forEach(image => state.images.push(image))
-        state.loaded = images.length < limit
-        state.loadingImages = false
-    },
-    [types.LOAD_IMAGES_FLAT.ERROR] (state) {
-        state.loadingImages = false
+    // Add images to the store, skipping any that are already loaded.
+    // This is used by the window-based image loading in SimpleTimeline.
+    // Images can arrive in any order (not just top-to-bottom), so we
+    // check by imageId to avoid duplicates.
+    'ADD_IMAGES' (state, newImages) {
+        newImages.forEach(image => {
+            // Only add this image if we don't already have it
+            const alreadyExists = state.images.some(existing => existing.imageId === image.imageId)
+            if (!alreadyExists) {
+                state.images.push(image)
+            }
+        })
     },
 
     [types.LOAD_TIMELINE.SUBMIT] (state) {
