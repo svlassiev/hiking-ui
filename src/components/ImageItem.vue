@@ -20,7 +20,13 @@
     <v-timeline-item hide-dot class="mt-0 py-0">
       <v-row>
         <v-col cols="12" align="center">
-          <div class="caption">{{ image.description }}</div>
+          <div class="caption">
+            {{ image.description }}
+            <a href="#" class="share-link ml-2" @click.prevent="onShareClick">
+              <v-icon x-small>mdi-share-variant</v-icon>
+              {{ shareLabel }}
+            </a>
+          </div>
         </v-col>
       </v-row>
     </v-timeline-item>
@@ -35,6 +41,11 @@ export default {
     image: {
       type: Object,
       required: true
+    }
+  },
+  data() {
+    return {
+      shareLabel: ''
     }
   },
   computed: {
@@ -69,6 +80,17 @@ export default {
     },
     onMapClick() {
       window.open(this.map)
+    },
+    onShareClick() {
+      const shareUrl = 'https://serg.vlassiev.info/share/hiking/image/' + this.image.imageId
+      if (navigator.share) {
+        navigator.share({ title: this.image.description || 'Hiking photo', url: shareUrl })
+      } else {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          this.shareLabel = 'Скопировано!'
+          setTimeout(() => { this.shareLabel = '' }, 2000)
+        })
+      }
     }
   }
 }
@@ -83,5 +105,12 @@ export default {
     white-space: nowrap;
     overflow: hidden;
     cursor: pointer;
+  }
+
+  .share-link {
+    color: #999;
+    text-decoration: none;
+    cursor: pointer;
+    &:hover { color: #333; }
   }
 </style>
