@@ -18,7 +18,8 @@ Browser → nginx (this app) → hiking-api (Ktor backend) → MongoDB + GCS
 
 | Route | Component | Description |
 |-------|-----------|-------------|
-| `/` | SimpleTimeline | Flat chronological photo feed with infinite scroll |
+| `/` | SimpleTimeline | Flat chronological photo feed with viewport-based image loading |
+| `/?image={id}` | SimpleTimeline | Deep link — scrolls to a specific photo |
 | `/timeline` | HikingTimeline | Albums as collapsible sections |
 | `/login` | Login | Firebase email/password auth |
 | `/edit` | Edit | Admin UI for managing albums and photos |
@@ -33,6 +34,16 @@ Automated via GitHub Actions. Every push to `master`:
 4. Deploys new image to the cluster
 
 **Required GitHub secrets:** `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `GCP_SA_KEY`
+
+## Image Loading
+
+Images load on demand based on viewport position, not sequentially from the top. An IntersectionObserver with 1000px look-ahead detects when image placeholders approach the viewport. A debounced handler (200ms) batches nearby unloaded images into a single API call. This works bidirectionally — scroll up or down, same logic.
+
+Deep links (`/hiking?image={id}`) scroll to the target photo on mount and load images around it.
+
+## Sharing
+
+Each photo has a share icon that uses `navigator.share()` on mobile (native share sheet) or copies the share URL to clipboard on desktop. Share URLs go through hiking-api's `/share/hiking/image/{id}` endpoint which serves Open Graph meta tags for social media previews.
 
 ## Local Development
 
