@@ -17,9 +17,14 @@
                 <img :src="spinnerSkin" class="favicon-spinner" />
             </v-row>
             <v-timeline v-else dense clipped align-top class="timeline">
+                <!-- The :id on this wrapper div (not on the placeholder inside) ensures
+                     we can scroll to an image even after it loads. The placeholder has
+                     v-if/v-else — when the image loads, the placeholder disappears and
+                     <image-item> replaces it. But this wrapper div persists with the id. -->
                 <div
                     v-for="entry in entries"
                     :key="entry.listId + entry.imageId + entry.title + entry.date"
+                    :id="entry.imageId ? 'img-' + entry.imageId : null"
                     ref="entry"
                     class="mb-4"
                     :small="$vuetify.breakpoint.xsOnly"
@@ -48,7 +53,6 @@
                          Once the image loads, Vue replaces this with <image-item> above. -->
                     <v-timeline-item
                         v-else-if="entry.imageId"
-                        :id="'img-' + entry.imageId"
                         hide-dot
                         :small="$vuetify.breakpoint.xsOnly"
                         class="loading-placeholder"
@@ -92,7 +96,14 @@ export default {
             // Instead of loading each one immediately, we wait a short time (200ms)
             // and batch them into a single API call. This prevents dozens of tiny
             // requests when the user scrolls quickly.
-            pendingImageIds: new Set()
+            pendingImageIds: new Set(),
+
+            // When following a shared link (/hiking?image=xxx), this holds the
+            // target image's index in allImageIds. While set, images ABOVE this
+            // index are NOT loaded — this prevents layout shift from pushing
+            // the target photo down as images above it expand from placeholders
+            // to full-size photos. Cleared after the scroll completes.
+            deepLinkImageIndex: null
         }
     },
 
@@ -109,13 +120,14 @@ export default {
         // This is just metadata — fast and small. No actual images yet.
         await this.$store.dispatch('loadSimpleTimeline')
 
-        // Step 2: If the URL has ?image=xxx (shared link), scroll to that image.
-        // The entries are in the DOM now (as placeholders), so we can scroll.
-        // The IntersectionObserver will then fire for nearby placeholders
-        // and load the right images automatically.
+        // Step 2: If the URL has ?image=xxx (shared link), load that image
+        // and scroll to it. We load the target + a few images BELOW first,
+        // wait for them to render at their final height, then scroll.
+        // Images above the target are NOT loaded yet — this prevents
+        // layout shift (images expanding above would push the target down).
         const targetImageId = this.$route.query.image
         if (targetImageId) {
-            this.scrollToImage(targetImageId)
+            await this.deepLinkToImage(targetImageId)
         }
     },
 
@@ -166,6 +178,14 @@ export default {
             // Skip images that are already loaded — nothing to do.
             if (!visible || this.imageMap.has(imageId)) return
 
+            // During a deep link scroll, don't load images ABOVE the target.
+            // If we did, they'd expand from 200px placeholders to full-size photos,
+            // pushing the target image down and causing the page to jump.
+            if (this.deepLinkImageIndex !== null) {
+                const thisIndex = this.allImageIds.indexOf(imageId)
+                if (thisIndex !== -1 && thisIndex < this.deepLinkImageIndex) return
+            }
+
             // Add this imageId to the "pending" set.
             // Don't fetch it immediately — wait for the debounce to collect
             // more nearby images and batch them into one API call.
@@ -206,15 +226,33 @@ export default {
             }
         },
 
-        // Scroll the page to a specific image's placeholder.
-        // Used when opening a shared link like /hiking?image=abc123.
-        scrollToImage(imageId) {
-            // Wait for Vue to finish rendering the DOM after entries are loaded
+        // Handle a shared link: load the target image + a few below it,
+        // wait for them to render at final height, then scroll to the target.
+        // Images above are blocked until scrolling is done (see onImageVisible).
+        async deepLinkToImage(imageId) {
+            const index = this.allImageIds.indexOf(imageId)
+            if (index === -1) return
+
+            // Block loading images above the target to prevent layout shift
+            this.deepLinkImageIndex = index
+
+            // Load the target + 5 images below it (not above).
+            // This ensures the target renders at its final height before we scroll.
+            const end = Math.min(this.allImageIds.length, index + 6)
+            const idsToLoad = this.allImageIds.slice(index, end)
+            await this.$store.dispatch('loadImageWindow', idsToLoad)
+
+            // Wait for Vue to render the loaded images in the DOM
             this.$nextTick(() => {
                 const element = document.getElementById('img-' + imageId)
                 if (element) {
-                    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    element.scrollIntoView({ block: 'center' })
                 }
+
+                // After 2 seconds, allow loading images above the target too.
+                // By then the user has seen the target photo and any further
+                // layout shift from images above won't be as jarring.
+                setTimeout(() => { this.deepLinkImageIndex = null }, 2000)
             })
         }
     }
