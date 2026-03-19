@@ -14,7 +14,7 @@
             <!-- Page loading spinner: shows the site favicon rotating while
                  timeline entries are being fetched from the API -->
             <v-row v-if="loading" justify="center" class="ma-8">
-                <img src="/logo.ico" class="favicon-spinner" />
+                <img :src="faviconUrl" class="favicon-spinner" />
             </v-row>
             <v-timeline v-else dense clipped align-top class="timeline">
                 <div
@@ -58,7 +58,7 @@
                         }"
                     >
                         <v-row justify="center">
-                            <img src="/logo.ico" class="favicon-spinner favicon-spinner-small" />
+                            <img :src="faviconUrl" class="favicon-spinner favicon-spinner-small" />
                         </v-row>
                     </v-timeline-item>
                 </div>
@@ -123,6 +123,11 @@ export default {
         },
         images() {
             return this.$store.state.images
+        },
+        // Path to the favicon, respecting the app's base URL (/hiking/).
+        // Used as the spinning loading indicator image.
+        faviconUrl() {
+            return process.env.BASE_URL + 'logo.ico'
         },
         // A Map for fast O(1) lookups: imageId → image object.
         // The images array can have items in any order, so we build
