@@ -11,10 +11,10 @@
         </v-app-bar>
 
         <v-content :class="{'ml-n7': $vuetify.breakpoint.xs}">
-            <v-row v-if="loading" justify-center class="ma-4" :class="{'ml-6': $vuetify.breakpoint.xs}">
-                <v-col align="start">
-                    <v-progress-circular indeterminate :color="dotColor()" :size="$vuetify.breakpoint.xsOnly ? '26' : '42'"/>
-                </v-col>
+            <!-- Page loading spinner: shows the site favicon rotating while
+                 timeline entries are being fetched from the API -->
+            <v-row v-if="loading" justify="center" class="ma-8">
+                <img src="/logo.ico" class="favicon-spinner" />
             </v-row>
             <v-timeline v-else dense clipped align-top class="timeline">
                 <div
@@ -40,10 +40,12 @@
                     <!-- Loaded image: show the actual photo -->
                     <image-item v-else-if="image(entry.imageId)" :image="image(entry.imageId)" />
 
-                    <!-- Unloaded image: show placeholder, observe when it becomes visible.
-                         The :id attribute lets us scroll to a specific image for deep links.
-                         rootMargin: "1000px" means we start loading 1000px BEFORE
-                         the placeholder scrolls into view, so images are ready ahead of time. -->
+                    <!-- Unloaded image placeholder: shows a small spinning favicon while
+                         the actual image data is being fetched from the API.
+                         The :id lets us scroll to this specific placeholder for deep links.
+                         v-observe-visibility watches when this placeholder approaches the
+                         viewport (1000px ahead), then triggers image loading.
+                         Once the image loads, Vue replaces this with <image-item> above. -->
                     <v-timeline-item
                         v-else-if="entry.imageId"
                         :id="'img-' + entry.imageId"
@@ -55,10 +57,8 @@
                             intersection: { rootMargin: '1000px' }
                         }"
                     >
-                        <v-row>
-                            <v-col align="center">
-                                <v-progress-linear :color="dotColor()" class="image-loader"/>
-                            </v-col>
+                        <v-row justify="center">
+                            <img src="/logo.ico" class="favicon-spinner favicon-spinner-small" />
                         </v-row>
                     </v-timeline-item>
                 </div>
@@ -222,7 +222,22 @@ export default {
         height: 200px;
     }
 
-    .image-loader {
-        max-width: 200px;
+    /* Spinning favicon used as a branded loading indicator.
+       The site's favicon (logo.ico) rotates continuously while content loads.
+       Two sizes: 48px for the initial page load, 24px for image placeholders. */
+    .favicon-spinner {
+        width: 48px;
+        height: 48px;
+        animation: spin 1.5s linear infinite;
+    }
+
+    .favicon-spinner-small {
+        width: 24px;
+        height: 24px;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
 </style>

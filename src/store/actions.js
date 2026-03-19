@@ -9,7 +9,11 @@ export default {
     // Images are loaded separately by loadImageWindow when they become visible.
     async loadSimpleTimeline({commit}) {
         commit(types.LOAD_SIMPLE_TIMELINE.SUBMIT)
-        axios.get(apiUrl + 'timeline/data')
+        // Important: return the promise so that "await dispatch('loadSimpleTimeline')"
+        // in SimpleTimeline.vue actually waits for the API response.
+        // Without return, the await resolves immediately and scrollToImage
+        // runs before entries are in the DOM.
+        return axios.get(apiUrl + 'timeline/data')
             .then(response => {
                 commit(types.LOAD_SIMPLE_TIMELINE.SUCCESS, response)
             })
