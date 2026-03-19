@@ -1,4 +1,3 @@
 module.exports = {
-  transpileDependencies: ['vuetify'],
-  publicPath: '/hiking/'
+  transpileDependencies: ['vuetify']
 }

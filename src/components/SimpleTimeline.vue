@@ -14,7 +14,7 @@
             <!-- Page loading spinner: shows the site favicon rotating while
                  timeline entries are being fetched from the API -->
             <v-row v-if="loading" justify="center" class="ma-8">
-                <img :src="faviconUrl" class="favicon-spinner" />
+                <img :src="spinnerSkin" class="favicon-spinner" />
             </v-row>
             <v-timeline v-else dense clipped align-top class="timeline">
                 <div
@@ -58,7 +58,7 @@
                         }"
                     >
                         <v-row justify="center">
-                            <img :src="faviconUrl" class="favicon-spinner favicon-spinner-small" />
+                            <img :src="spinnerSkin" class="favicon-spinner favicon-spinner-small" />
                         </v-row>
                     </v-timeline-item>
                 </div>
@@ -73,6 +73,10 @@ import { ObserveVisibility } from 'vue-observe-visibility'
 import debounce from 'lodash/debounce'
 import ImageItem from './ImageItem'
 
+// Webpack processes this image at build time.
+// At 1.3KB it gets inlined as a base64 data URL — no network request needed.
+import spinnerSkin from '@/assets/spinner-skin.png'
+
 export default {
     name: 'SimpleTimeline',
     components: { ImageItem },
@@ -80,6 +84,10 @@ export default {
 
     data() {
         return {
+            // The spinner image URL, resolved by webpack at build time.
+            // It's a base64 data URL so it renders instantly without a network request.
+            spinnerSkin,
+
             // Collects imageIds of placeholders that recently became visible.
             // Instead of loading each one immediately, we wait a short time (200ms)
             // and batch them into a single API call. This prevents dozens of tiny
@@ -123,11 +131,6 @@ export default {
         },
         images() {
             return this.$store.state.images
-        },
-        // Path to the favicon, respecting the app's base URL (/hiking/).
-        // Used as the spinning loading indicator image.
-        faviconUrl() {
-            return process.env.BASE_URL + 'logo.ico'
         },
         // A Map for fast O(1) lookups: imageId → image object.
         // The images array can have items in any order, so we build
@@ -227,8 +230,8 @@ export default {
         height: 200px;
     }
 
-    /* Spinning favicon used as a branded loading indicator.
-       The site's favicon (logo.ico) rotates continuously while content loads.
+    /* Spinning logo used as a branded loading indicator.
+       spinner-skin.png rotates continuously while content loads.
        Two sizes: 48px for the initial page load, 24px for image placeholders. */
     .favicon-spinner {
         width: 48px;
